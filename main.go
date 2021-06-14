@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"time"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 func main() {
@@ -14,17 +16,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer f.Close()
 	for {
-		mem := &runtime.MemStats{}
-		cpu := runtime.NumCPU()
-		rot := runtime.NumGoroutine()
-		runtime.ReadMemStats(mem)
-		fmt.Fprintf(f, "%v cpu %v gor %v mem %v %v\n",
+		v, _ := mem.VirtualMemory()
+		c, _ := cpu.Times(false)
+		fmt.Fprintf(f, "%v total: %v, free: %v, used: %v%%, cpu: %v\n",
 			time.Now().Format("2006-02-01 15:04:05"),
-			cpu,
-			rot,
-			mem.Alloc,
-			mem.HeapAlloc,
+			v.Total,
+			v.Free,
+			v.UsedPercent,
+			c,
 		)
 		time.Sleep(5 * time.Second)
 	}
